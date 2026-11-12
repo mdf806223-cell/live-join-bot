@@ -151,12 +151,17 @@ def _ensure_silence() -> str:
 
 def _silence_stream():
     """
-    pytgcalls 3.x এ MediaStream দিয়ে silent audio stream।
+    pytgcalls 3.x raw Stream দিয়ে silent audio stream।
+    play() এ Stream object দিতে হয়।
     """
-    from pytgcalls.types import MediaStream, AudioQuality
-    return MediaStream(
-        _ensure_silence(),
-        audio_parameters=AudioQuality.HIGH,
+    from pytgcalls.types.raw import Stream, AudioStream, AudioParameters
+    from ntgcalls import MediaSource
+    return Stream(
+        microphone=AudioStream(
+            MediaSource.FILE,
+            _ensure_silence(),
+            AudioParameters(bitrate=48000, channels=1),
+        )
     )
 
 
@@ -176,7 +181,7 @@ def _register_stream_loop(engine: PyTgCalls, account_id: int):
             await client_eng.play(
                 update.chat_id,
                 _silence_stream(),
-                config=GroupCallConfig(auto_start=False),
+                config=GroupCallConfig(auto_start=True),
             )
             log.info(f"[stream] ✅ {account_id} silent stream restart হলো")
         except Exception as e:
@@ -451,7 +456,7 @@ async def _keepalive_loop(
                 await engine.play(
                     chat_id,
                     _silence_stream(),
-                    config=GroupCallConfig(join_as=join_as, auto_start=False),
+                    config=GroupCallConfig(join_as=join_as, auto_start=True),
                 )
                 # Mute করো
                 try:
@@ -540,15 +545,11 @@ async def join_live_stream(
             await engine.play(
                 chat_id,
                 _silence_stream(),
-                config=GroupCallConfig(join_as=join_as, auto_start=False),
+                config=GroupCallConfig(join_as=join_as, auto_start=True),
             )
         except Exception as e:
-            log.warning(f"[join] {account_id} silent stream ব্যর্থ ({e}), retry...")
-            await engine.play(
-                chat_id,
-                None,
-                config=GroupCallConfig(join_as=join_as, auto_start=False),
-            )
+            log.warning(f"[join] {account_id} silent stream ব্যর্থ: {e}")
+            raise
 
         # Mute করো (join এর পরপরই)
         try:

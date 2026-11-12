@@ -151,18 +151,12 @@ def _ensure_silence() -> str:
 
 def _silence_stream():
     """
-    bot.py এর _silence_stream() এর মতো।
-    PyTgCalls এর Stream object — real WebRTC UDP connection এর
-    জন্য silent audio source দেয়।
+    pytgcalls 3.x এ MediaStream দিয়ে silent audio stream।
     """
-    from pytgcalls.types.raw import Stream, AudioStream, AudioParameters
-    from ntgcalls import MediaSource
-    return Stream(
-        microphone=AudioStream(
-            MediaSource.FILE,
-            _ensure_silence(),
-            AudioParameters(bitrate=48000, channels=1),
-        )
+    from pytgcalls.types import MediaStream, AudioQuality
+    return MediaStream(
+        _ensure_silence(),
+        audio_parameters=AudioQuality.HIGH,
     )
 
 
